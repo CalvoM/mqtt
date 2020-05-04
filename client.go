@@ -1,7 +1,11 @@
 package mqtt
+
 //Client :
 type Client struct{}
 
-func (c *Client)connect() error{
-
+//packet
+type packet struct {
+	fixedHeader    []byte
+	variableHeader []byte
+	payLoad        []byte
 }
