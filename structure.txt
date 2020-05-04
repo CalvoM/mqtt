@@ -1,0 +1,16 @@
+Control Packet Structure:
+    1. Fixed header - slice of bytes
+    2. Variable header - 2 bytes
+    3. Payload -
+
+Control Packets by client | Methods
+    1.  Connect     | Connect
+    2.  Publish     | Publish
+    3.  PubAck      | AcknowledgedPublish
+    4.  PubRec      | ReceivedPublish
+    5.  PubRel      | ReleasePublish
+    6.  PubComp     | CompletedPublish
+    7.  Subscribe   | Subscribe
+    8.  Unsubscribe | Unsubscribe
+    9.  PingReq     | Ping
+    10. Disconnect  | Disconnect
