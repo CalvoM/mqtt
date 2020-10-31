@@ -14,3 +14,30 @@ Control Packets by client | Methods
     8.  Unsubscribe | Unsubscribe
     9.  PingReq     | Ping
     10. Disconnect  | Disconnect
+
+CONNECT Packet:
+    Fixed Header:
+                _________
+        Byte-1: 0001|0000|
+        Byte-2: Remaining Length(len(Variable Header)+len(payload))
+    
+    Variable Header: -> 10 bytes
+        Protocol Name - 6 bytes
+        Protocol Length - 1 byte
+        Connect Flags - 1 byte
+        Keep-Alive - 2 bytes
+        Connect Flags:
+            0 -  Reserved
+            1 - Clean Session
+            2 - Will Flag
+            3
+            4 - Will Qos
+            5 - Will Retain
+            6 - Password 
+            7 - Username
+    Payload:
+        ClientId 1-23 bytes
+        Will Topic
+        Will Message
+        Username
+        Password
