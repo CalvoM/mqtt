@@ -2,7 +2,6 @@ package mqtt
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net"
 )
@@ -43,25 +42,23 @@ func (c *Client) Init(options *ConnectOptions){
 		log.Fatal(err)
 	}
 }
+func (c *Client) GetSrvPacket(buf []byte)(int,error){
+	return c.conn.Read(buf)
+}
 //Connect configure and send the connect packet to the server
 func (c *Client) Connect() {
 	pkt := packet{}
 	pkt.configureConnectPackets(c.options)
 	sendBytes:=pkt.FormulateMQTTOutputData()
 	_,_=fmt.Fprintf(c.conn,"%s",string(sendBytes))
-	buf:=make([]byte,0,40960)
-	tmp:=make([]byte,1)
-	for {
-		status,err:=c.conn.Read(tmp)
-		if err!=nil{
-		  if err==io.EOF{
-		  	fmt.Println("EOF")
-		  	break
-		  }
-		 fmt.Println(err.Error())
-		  }
-		  buf = append(buf,tmp[:status]...)
-		  fmt.Print(tmp[0])
+	ctrl:=make([]byte,1)
+	c.GetSrvPacket(ctrl)
+	if int(ctrl[0])==ControlPktConnAck{
+		data:=make([]byte,3)
+		c.GetSrvPacket(data)
+		fmt.Println("Remaining Length:",data[0])
+		fmt.Println("Session Present:",data[1])
+		fmt.Println("Connect Return Code:",data[2])
 	}
 	defer c.conn.Close()
 }

@@ -23,4 +23,11 @@ const(
 	FlagWillRetain=0x20
 	FlagUsername=0x80
 	FlagPassword=0x40
+
+	ConnectionAccepted=0x00
+	ConnectionRefusedProtocolVersion=0x01
+	ConnectionRefusedIdentifierRejected=0x02
+	ConnectionRefusedServerUnavailable=0x03
+	ConnectionRefusedUsernamePassword=0x04
+	ConnectionRefusedNotAuthorized=0x05
 )
