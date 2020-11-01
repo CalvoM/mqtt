@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"math"
+"github.com/CalvoM/mqtt"
 )
 
 func encodeRemainingLength(n uint64) []byte{
@@ -38,7 +38,20 @@ func decodeRemainingLength(encodedBytes []byte) (uint64,error){
 }
 
 func main() {
-	fmt.Println(321)
-	eB:=encodeRemainingLength(uint64(321))
-	fmt.Println(decodeRemainingLength(eB))
+	client:= mqtt.Client{
+		Host:"mqtt.m-vend.com",
+		Port:"1883",
+	}
+	options:=mqtt.ConnectOptions{
+		CleanSession:true,
+		KeepAlive:16,
+		Password:"john",
+		Username:"john",
+		WillFlag:true,
+		WillTopic:"v/t/will",
+		WillMessage:"Goodbye",
+		WillQOS:2,
+	}
+	client.Init(&options)
+	client.Connect()
 }

@@ -15,4 +15,12 @@ const(
 	ControlPktPingResp=0xD0
 	ControlPktDisconnect=0xE0
 	ControlPktAuth=0xF0
+
+	FlagCleanSessionEnabled=0x02
+	FlagWillFlagEnabled=0x04
+	FlagWillQOS1=0x08
+	FlagWillQOS2=0x10
+	FlagWillRetain=0x20
+	FlagUsername=0x80
+	FlagPassword=0x40
 )
