@@ -37,7 +37,7 @@ func (pkt *packet) configureConnectPackets(options *ConnectOptions) {
 	pkt.variableHeader = append(pkt.variableHeader,byte(len("MQTT")))
 	pkt.variableHeader=append(pkt.variableHeader,[]byte("MQTT")...)
 	//Protocol Level
-	pkt.variableHeader= append(pkt.variableHeader,byte(mqttProtocolLvl))
+	pkt.variableHeader= append(pkt.variableHeader,byte(MqttProtocolLvl))
 	//Connect Flags
 	connectFlag := byte(0)
 	if options.CleanSession {

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	mqttProtocolLvl = 4
+	MqttProtocolLvl = 4
 )
 
 //Client implements the mqtt client
@@ -46,19 +46,34 @@ func (c *Client) GetSrvPacket(buf []byte)(int,error){
 	return c.conn.Read(buf)
 }
 //Connect configure and send the connect packet to the server
-func (c *Client) Connect() {
+func (c *Client) Connect() error{
 	pkt := packet{}
 	pkt.configureConnectPackets(c.options)
 	sendBytes:=pkt.FormulateMQTTOutputData()
 	_,_=fmt.Fprintf(c.conn,"%s",string(sendBytes))
 	ctrl:=make([]byte,1)
-	c.GetSrvPacket(ctrl)
+	r,err:=c.GetSrvPacket(ctrl)
+	if err!=nil{
+		return &mqttErr{r,"Issue with getting packet"}
+	}
 	if int(ctrl[0])==ControlPktConnAck{
 		data:=make([]byte,3)
 		c.GetSrvPacket(data)
-		fmt.Println("Remaining Length:",data[0])
-		fmt.Println("Session Present:",data[1])
-		fmt.Println("Connect Return Code:",data[2])
+		switch data[2] {
+		case ConnectionAccepted:
+			return nil
+		case ConnectionRefusedProtocolVersion:
+			return &mqttErr{ConnectionRefusedProtocolVersion,"Protocol Version Not supported"}
+		case ConnectionRefusedServerUnavailable:
+			return &mqttErr{ConnectionRefusedServerUnavailable,"Server Unavailable"}
+		case ConnectionRefusedUsernamePassword:
+			return &mqttErr{ConnectionRefusedUsernamePassword,"Wrong Username or Password"}
+		case ConnectionRefusedNotAuthorized:
+			return &mqttErr{ConnectionRefusedNotAuthorized,"Not Authorised"}
+		}
+	}else{
+		return &mqttErr{-1,"Connack Packet Not received"}
 	}
 	defer c.conn.Close()
+	return nil
 }
