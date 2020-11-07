@@ -13,7 +13,7 @@ type ConnectOptions struct {
 	Username     string
 	Password     string
 	WillRetain   bool
-	WillQOS      int
+	WillQOS      QOS
 	WillFlag     bool
 	CleanSession bool
 	KeepAlive    uint16
@@ -48,10 +48,10 @@ func (pkt *packet) configureConnectPackets(options *ConnectOptions) {
 		if options.WillQOS == 0 {
 			connectFlag |= 0x00
 		}
-		if options.WillQOS == 1 {
+		if options.WillQOS == QOS1 {
 			connectFlag |= FlagWillQOS1
 		}
-		if options.WillQOS == 2 {
+		if options.WillQOS == QOS2 {
 			connectFlag |= FlagWillQOS2
 		}
 		if options.WillRetain {
@@ -106,4 +106,20 @@ func(pkt *packet) SetConnectPayload(options *ConnectOptions){
 		}
 	}
 
+}
+func (pkt *packet) configureSubscribePackets(topic string, qos QOS){
+	pkt.fixedHeader = append(pkt.fixedHeader,ControlPktSubscribe|0x02)
+	var packetId uint16 = PacketIdentifier
+	k:=make([]byte,2)
+	binary.BigEndian.PutUint16(k,packetId)
+	pkt.variableHeader = append(pkt.variableHeader,k...)
+	n:=make([]byte,2)
+	var topicLen uint16 = uint16(len(topic))
+	binary.BigEndian.PutUint16(n,topicLen)
+	pkt.payload = append(pkt.payload,n...)
+	pkt.payload = append(pkt.payload,[]byte(topic)...)
+	pkt.payload = append(pkt.payload,byte(qos))
+	length:=len(pkt.variableHeader)+len(pkt.payload)
+	remLength:=encodeRemainingLength(uint64(length))
+	pkt.fixedHeader = append(pkt.fixedHeader,remLength...)
 }

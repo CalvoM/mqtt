@@ -64,6 +64,8 @@ func (c *Client) Connect() error{
 			return nil
 		case ConnectionRefusedProtocolVersion:
 			return &mqttErr{ConnectionRefusedProtocolVersion,"Protocol Version Not supported"}
+		case ConnectionRefusedIdentifierRejected:
+			return &mqttErr{ConnectionRefusedIdentifierRejected,"Identifier rejected"}
 		case ConnectionRefusedServerUnavailable:
 			return &mqttErr{ConnectionRefusedServerUnavailable,"Server Unavailable"}
 		case ConnectionRefusedUsernamePassword:
@@ -73,6 +75,24 @@ func (c *Client) Connect() error{
 		}
 	}else{
 		return &mqttErr{-1,"Connack Packet Not received"}
+	}
+	//defer c.conn.Close()
+	return nil
+}
+func (c *Client) Subscribe(topic string, qos QOS) error{
+	pkt:=packet{}
+	pkt.configureSubscribePackets(topic,qos)
+	sendBytes:=pkt.FormulateMQTTOutputData()
+	_,_=fmt.Fprintf(c.conn,"%s",string(sendBytes))
+	ctrl:=make([]byte,1)
+	r,err:=c.GetSrvPacket(ctrl)
+	if err!=nil{
+		return &mqttErr{r,"Issue with getting packet"}
+	}
+	if int(ctrl[0])==ControlPktSubAck{
+
+	}else{
+		return &mqttErr{int(ctrl[0]),"Failed to subscribe"}
 	}
 	defer c.conn.Close()
 	return nil

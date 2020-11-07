@@ -30,4 +30,12 @@ const(
 	ConnectionRefusedServerUnavailable=0x03
 	ConnectionRefusedUsernamePassword=0x04
 	ConnectionRefusedNotAuthorized=0x05
+	PacketIdentifier=0x0010
+)
+type QOS int8
+const (
+	QOS0 QOS = iota
+	QOS1
+	QOS2
+	QOSFail
 )

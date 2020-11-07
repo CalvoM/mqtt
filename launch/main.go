@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"github.com/CalvoM/mqtt"
+	"github.com/spf13/viper"
 	"io"
+	"log"
 	"math"
-"github.com/CalvoM/mqtt"
 )
 
 func encodeRemainingLength(n uint64) []byte{
@@ -38,20 +41,30 @@ func decodeRemainingLength(encodedBytes []byte) (uint64,error){
 }
 
 func main() {
+	viper.SetConfigFile("../.env")
+	viper.ReadInConfig()
+	host:=viper.Get("MQTT_HOST").(string)
+	user:=viper.Get("MQTT_USER").(string)
+	pswd:=viper.Get("MQTT_PWD").(string)
 	client:= mqtt.Client{
-		Host:"mqtt.m-vend.com",
+		Host:host,
 		Port:"1883",
 	}
 	options:=mqtt.ConnectOptions{
 		CleanSession:true,
 		KeepAlive:16,
-		Password:"john",
-		Username:"john",
+		Password:pswd,
+		Username:user,
 		WillFlag:true,
 		WillTopic:"v/t/will",
 		WillMessage:"Goodbye",
-		WillQOS:2,
+		WillQOS:mqtt.QOS2,
 	}
 	client.Init(&options)
-	client.Connect()
+	err:=client.Connect()
+	if err!=nil{
+		log.Fatal(err.Error())
+	}
+	fmt.Println("Connection Successful")
+	_=client.Subscribe("v/#",mqtt.QOS0)
 }
