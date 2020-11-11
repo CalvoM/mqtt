@@ -1,6 +1,8 @@
 package mqtt
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
 //packet
 type packet struct {
@@ -119,6 +121,34 @@ func (pkt *packet) configureSubscribePackets(topic string, qos QOS){
 	pkt.payload = append(pkt.payload,n...)
 	pkt.payload = append(pkt.payload,[]byte(topic)...)
 	pkt.payload = append(pkt.payload,byte(qos))
+	length:=len(pkt.variableHeader)+len(pkt.payload)
+	remLength:=encodeRemainingLength(uint64(length))
+	pkt.fixedHeader = append(pkt.fixedHeader,remLength...)
+}
+func (pkt *packet) configurePingRequest(){
+	pkt.fixedHeader = append(pkt.fixedHeader,ControlPktPingReq)
+	pkt.fixedHeader = append(pkt.fixedHeader,0)
+}
+func (pkt *packet) configurePublish(topic string,message string,dup bool,qos QOS){
+	fixed:=ControlPktPublish
+	if dup{
+		fixed|=0x08
+	}
+	if qos == QOS1{
+		fixed|=0x02
+	}else if qos == QOS2{
+		fixed|=0x06
+	}
+	pkt.fixedHeader = append(pkt.fixedHeader,byte(fixed))
+	k:=make([]byte,2)
+	binary.BigEndian.PutUint16(k,uint16(len(topic)))
+	pkt.variableHeader = append(pkt.variableHeader,k...)
+	pkt.variableHeader = append(pkt.variableHeader,[]byte(topic)...)
+	k=make([]byte,2)
+	var packetId uint16 = PacketIdentifier
+	binary.BigEndian.PutUint16(k,packetId)
+	pkt.variableHeader = append(pkt.variableHeader,k...)
+	pkt.variableHeader = append(pkt.variableHeader,[]byte(message)...)
 	length:=len(pkt.variableHeader)+len(pkt.payload)
 	remLength:=encodeRemainingLength(uint64(length))
 	pkt.fixedHeader = append(pkt.fixedHeader,remLength...)
