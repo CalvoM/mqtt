@@ -1,0 +1,43 @@
+Control Packet Structure:
+    1. Fixed header - slice of bytes
+    2. Variable header - 2 bytes
+    3. Payload -
+
+Control Packets by client | Methods
+    1.  Connect     | Connect
+    2.  Publish     | Publish
+    3.  PubAck      | AcknowledgedPublish
+    4.  PubRec      | ReceivedPublish
+    5.  PubRel      | ReleasePublish
+    6.  PubComp     | CompletedPublish
+    7.  Subscribe   | Subscribe
+    8.  Unsubscribe | Unsubscribe
+    9.  PingReq     | Ping
+    10. Disconnect  | Disconnect
+
+CONNECT Packet:
+    Fixed Header:
+                _________
+        Byte-1: 0001|0000|
+        Byte-2: Remaining Length(len(Variable Header)+len(payload))
+    
+    Variable Header: -> 10 bytes
+        Protocol Name - 6 bytes
+        Protocol Length - 1 byte
+        Connect Flags - 1 byte
+        Keep-Alive - 2 bytes
+        Connect Flags:
+            0 -  Reserved
+            1 - Clean Session
+            2 - Will Flag
+            3
+            4 - Will Qos
+            5 - Will Retain
+            6 - Password 
+            7 - Username
+    Payload:
+        ClientId 1-23 bytes
+        Will Topic
+        Will Message
+        Username
+        Password
