@@ -39,3 +39,8 @@ const (
 	QOS2
 	QOSFail
 )
+type MessageHandler func(MessageData)
+type MessageData struct{
+	Topic string
+	Payload string
+}
