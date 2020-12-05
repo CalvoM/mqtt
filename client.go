@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -15,16 +18,17 @@ const (
 
 //Client implements the mqtt client
 type Client struct {
-	Host      string
-	Port      string
-	options   *ConnectOptions
-	conn      net.Conn
-	done      chan int
-	readPong  chan bool
-	commLock  sync.Mutex
-	topic     string
-	qos       QOS
-	OnMessage MessageHandler
+	Host       string
+	Port       string
+	options    *ConnectOptions
+	conn       net.Conn
+	done       chan int
+	readPong   chan bool
+	getSignals chan os.Signal
+	commLock   sync.Mutex
+	topic      string
+	qos        QOS
+	OnMessage  MessageHandler
 }
 
 type client interface {
@@ -46,6 +50,8 @@ func (c *Client) Init(options *ConnectOptions) {
 	c.options = options
 	c.done = make(chan int)
 	c.readPong = make(chan bool)
+	c.getSignals = make(chan os.Signal)
+	signal.Notify(c.getSignals, syscall.SIGINT)
 	addr := net.JoinHostPort(c.Host, c.Port)
 	c.conn, err = net.Dial("tcp", addr)
 	if err != nil {
@@ -102,6 +108,10 @@ func (c *Client) AwaitMessages() {
 	var i int
 	for {
 		select {
+		case <-c.done:
+			c.conn.Close()
+			os.Exit(0)
+			break
 		case pong := <-c.readPong:
 			for pong == true {
 				pong = <-c.readPong
@@ -144,6 +154,8 @@ func (c *Client) SendPing() {
 		select {
 		case <-c.done:
 			c.conn.Close()
+			os.Exit(0)
+			break
 		default:
 			time.Sleep(d * time.Second)
 			c.readPong <- true
@@ -198,6 +210,7 @@ func (c *Client) Subscribe(topic string, qos QOS) error {
 	}
 	go c.SendPing()
 	go c.AwaitMessages()
+	go c.handleSignals()
 	return nil
 }
 
@@ -238,4 +251,23 @@ func (c *Client) DecodePublish(data []byte) (MessageData, error) {
 	}
 	msg.Payload = string(message)
 	return msg, nil
+}
+
+//Disconnect send disconnect packet
+func (c *Client) Disconnect() error {
+	pkt := packet{}
+	pkt.configureDisconnect()
+	sendBytes := pkt.FormulateMQTTOutputData()
+	c.conn.Write(sendBytes)
+	return nil
+}
+
+func (c *Client) handleSignals() {
+	select {
+	case signal := <-c.getSignals:
+		if signal == syscall.SIGINT {
+			c.Disconnect()
+			c.done <- 1
+		}
+	}
 }
